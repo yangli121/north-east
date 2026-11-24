@@ -15,7 +15,7 @@ from pyecharts import options as opts
 from pyecharts.charts import Line, Pie, HeatMap, Scatter
 
 # =============================================================================
-# 0. 全局配置与页面美化（强制浅色模式）
+# 0. 全局配置与页面美化（强制浅色模式，防止深色模式看不清）
 # =============================================================================
 st.set_page_config(
     page_title="机场货邮数据分析与智能预测系统",
@@ -24,23 +24,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 自定义 CSS：强制所有文本为深色，背景为浅色，防止深色模式干扰
 st.markdown("""
 <style>
-    /* 强制隐藏默认菜单 */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* 全局背景与基础字体强制深色 */
-    .stApp {
-        background-color: #F4F7F9 !important;
-    }
-    h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown {
-        color: #2C3E50 !important;
-    }
+    .stApp { background-color: #F4F7F9 !important; }
+    h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown { color: #2C3E50 !important; }
     
-    /* 顶部主标题特殊处理（保留渐变效果） */
     .main-title {
         font-size: 2.2rem;
         font-weight: 800;
@@ -58,7 +50,6 @@ st.markdown("""
         margin-bottom: 25px;
     }
     
-    /* 卡片式指标设计 */
     div[data-testid="stMetric"] {
         background-color: #FFFFFF !important;
         border-radius: 8px;
@@ -66,40 +57,27 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         border-left: 5px solid #1E6FA8;
     }
-    div[data-testid="stMetric"] * {
-        color: #0B3D6B !important; /* 卡片内文字强制深蓝 */
-    }
+    div[data-testid="stMetric"] * { color: #0B3D6B !important; }
     
-    /* 侧边栏美化 */
     [data-testid="stSidebar"] {
         background-color: #FFFFFF !important;
         box-shadow: 2px 0 5px rgba(0,0,0,0.05);
     }
-    [data-testid="stSidebar"] * {
-        color: #2C3E50 !important;
-    }
+    [data-testid="stSidebar"] * { color: #2C3E50 !important; }
     
-    /* 按钮样式 */
     .stButton>button {
         background-color: #1E6FA8 !important;
         color: #FFFFFF !important;
         border-radius: 5px;
         border: none;
-        transition: all 0.3s;
     }
-    .stButton>button:hover {
-        background-color: #0B3D6B !important;
-    }
-    
-    /* 表格样式 */
-    .stDataFrame {
-        background-color: #FFFFFF !important;
-    }
+    .stButton>button:hover { background-color: #0B3D6B !important; }
+    .stDataFrame { background-color: #FFFFFF !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# 1. 数据初始化（首次运行自动生成演示数据集）
+# 1. 数据初始化
 # =============================================================================
 DATA_DIR = "data"
 DATA_PATH = os.path.join(DATA_DIR, "airport_cargo.csv")
@@ -159,7 +137,7 @@ def save_data(df: pd.DataFrame) -> None:
     df.to_csv(DATA_PATH, index=False, encoding="utf-8-sig")
 
 # =============================================================================
-# 2. 算法模块 (预测模型)
+# 2. 算法模块
 # =============================================================================
 def model_elasticity(base, gdp_rate, elasticity, years):
     m = gdp_rate / 100.0
@@ -202,7 +180,6 @@ def model_holt(historical_y, years, alpha=0.3, beta=0.1):
         trend = beta * (level - last_level) + (1 - beta) * trend
     return [max(level + i * trend, 0) for i in range(1, years + 1)]
 
-
 # =============================================================================
 # 3. 页面顶部与侧边栏
 # =============================================================================
@@ -222,7 +199,6 @@ with st.sidebar:
     st.divider()
     st.caption("课程设计 · 民航交通工程")
 
-
 # =============================================================================
 # 4. 页面：数据概览
 # =============================================================================
@@ -235,23 +211,17 @@ if page == "📊 数据概览":
     c4.metric("总货邮量（吨）", f"{df['货邮吞吐量(吨)'].sum():,.0f}")
 
     st.markdown("### 各机场年度货邮吞吐量汇总（吨）")
-    pivot = (
-        df.groupby(["机场名称", "年份"])["货邮吞吐量(吨)"]
-        .sum().round(1).unstack("年份")
-    )
+    pivot = df.groupby(["机场名称", "年份"])["货邮吞吐量(吨)"].sum().round(1).unstack("年份")
     st.dataframe(pivot, use_container_width=True)
 
     st.markdown("### 原始数据预览（前 20 行）")
     st.dataframe(df.head(20), use_container_width=True)
 
-
 # =============================================================================
 # 5. 页面：数据管理
 # =============================================================================
 elif page == "🛠️ 数据管理":
-    tab_q, tab_add, tab_edit, tab_del, tab_io = st.tabs(
-        ["🔍 查询", "➕ 新增", "✏️ 修改", "🗑️ 删除", "📁 导入/导出"]
-    )
+    tab_q, tab_add, tab_edit, tab_del, tab_io = st.tabs(["🔍 查询", "➕ 新增", "✏️ 修改", "🗑️ 删除", "📁 导入/导出"])
 
     with tab_q:
         c1, c2, c3 = st.columns(3)
@@ -282,8 +252,7 @@ elif page == "🛠️ 数据管理":
             with c5: a_wd = st.number_input("月平均风速(m/s)", 0.0, 30.0, 3.5, step=0.1, key="a_wd")
             if st.form_submit_button("确认新增", type="primary"):
                 dup = (df["机场名称"] == a_ap) & (df["年份"] == int(a_yr)) & (df["月份"] == int(a_mo))
-                if dup.any():
-                    st.error("该机场该年月已存在记录，请使用“修改”功能。")
+                if dup.any(): st.error("该机场该年月已存在记录，请使用“修改”功能。")
                 else:
                     df = pd.concat([df, pd.DataFrame([{
                         "机场名称": a_ap, "年份": int(a_yr), "月份": int(a_mo),
@@ -338,20 +307,18 @@ elif page == "🛠️ 数据管理":
 
     with tab_io:
         st.markdown("**CSV 批量导入**")
-        up = st.file_uploader("上传 CSV（字段需与系统一致，utf-8 编码）", type=["csv"])
+        up = st.file_uploader("上传 CSV", type=["csv"])
         if up is not None:
             try:
                 imported = pd.read_csv(up, encoding="utf-8-sig")
                 missing = set(COLUMNS) - set(imported.columns)
-                if missing:
-                    st.error(f"缺少字段：{missing}")
+                if missing: st.error(f"缺少字段：{missing}")
                 else:
                     save_data(imported[COLUMNS])
                     st.success(f"导入成功，共 {len(imported)} 条记录。")
                     rerun()
             except Exception as exc:
                 st.error(f"导入失败：{exc}")
-
         st.divider()
         st.markdown("**一键导出**")
         st.download_button(
@@ -361,57 +328,41 @@ elif page == "🛠️ 数据管理":
             mime="text/csv",
         )
 
-
 # =============================================================================
 # 6. 页面：可视化分析
 # =============================================================================
 elif page == "📈 可视化分析":
-    scope = st.radio(
-        "查看范围", ["全部机场对比"] + sorted(df["机场名称"].unique()),
-        horizontal=True, key="viz_scope",
-    )
+    scope = st.radio("查看范围", ["全部机场对比"] + sorted(df["机场名称"].unique()), horizontal=True, key="viz_scope")
     plot_df = df if scope == "全部机场对比" else df[df["机场名称"] == scope].copy()
 
     st.markdown("#### ① 货邮吞吐量月度时序趋势")
-    monthly = (
-        plot_df.groupby(["年份", "月份"])["货邮吞吐量(吨)"]
-        .sum().reset_index().sort_values(["年份", "月份"])
-    )
+    monthly = plot_df.groupby(["年份", "月份"])["货邮吞吐量(吨)"].sum().reset_index().sort_values(["年份", "月份"])
     monthly["时间"] = monthly["年份"].astype(str) + "-" + monthly["月份"].astype(str).str.zfill(2)
     
-    line = Line(init_opts=opts.InitOpts(height="360px", bg_color="#FFFFFF"))
+    line = Line(init_opts=opts.InitOpts(width="100%", height="360px", bg_color="#FFFFFF"))
     line.add_xaxis(monthly["时间"].tolist())
-    line.add_yaxis(
-        "货邮吞吐量(吨)", monthly["货邮吞吐量(吨)"].round(1).tolist(),
-        is_smooth=True, label_opts=opts.LabelOpts(is_show=False),
-        linestyle_opts=opts.LineStyleOpts(width=2.4, color="#1E6FA8"),
-        itemstyle_opts=opts.ItemStyleOpts(color="#1E6FA8")
-    )
+    line.add_yaxis("货邮吞吐量(吨)", monthly["货邮吞吐量(吨)"].round(1).tolist(), is_smooth=True, label_opts=opts.LabelOpts(is_show=False), linestyle_opts=opts.LineStyleOpts(width=2.4, color="#1E6FA8"), itemstyle_opts=opts.ItemStyleOpts(color="#1E6FA8"))
     line.set_global_opts(
         xaxis_opts=opts.AxisOpts(type_="category", axislabel_opts=opts.LabelOpts(rotate=55, interval=5)),
         yaxis_opts=opts.AxisOpts(name="吨"),
         tooltip_opts=opts.TooltipOpts(trigger="axis"),
         datazoom_opts=[opts.DataZoomOpts(range_start=0, range_end=100)],
     )
-    st_pyecharts(line, key=f"line_{scope}")
+    st_pyecharts(line)
 
     st.markdown("#### ② 货机架次占比")
-    pie = Pie(init_opts=opts.InitOpts(height="340px", bg_color="#FFFFFF"))
+    pie = Pie(init_opts=opts.InitOpts(width="100%", height="340px", bg_color="#FFFFFF"))
     if scope == "全部机场对比":
         pie_data = df.groupby("机场名称")["货机架次"].sum().sort_values(ascending=False)
         pie.add("", [(str(k), int(v)) for k, v in pie_data.items()], radius=["32%", "62%"], label_opts=opts.LabelOpts(formatter="{b}\n{d}%"))
     else:
         pie_data = plot_df.groupby("年份")["货机架次"].sum().sort_index()
         pie.add("", [(f"{k}年", int(v)) for k, v in pie_data.items()], radius=["32%", "62%"], label_opts=opts.LabelOpts(formatter="{b}\n{d}%"))
-    pie.set_global_opts(
-        legend_opts=opts.LegendOpts(orient="vertical", pos_left="left"),
-        tooltip_opts=opts.TooltipOpts(trigger="item"),
-    )
-    st_pyecharts(pie, key=f"pie_{scope}")
+    pie.set_global_opts(legend_opts=opts.LegendOpts(orient="vertical", pos_left="left"), tooltip_opts=opts.TooltipOpts(trigger="item"))
+    st_pyecharts(pie)
 
     st.markdown("#### ③ 月度货运季节热力图")
     heat_df = df if scope == "全部机场对比" else plot_df
-    heat_caption = "全部机场合计" if scope == "全部机场对比" else scope
     heat_pivot = heat_df.groupby(["年份", "月份"])["货邮吞吐量(吨)"].sum().unstack("月份")
     years_h = heat_pivot.index.tolist()
     heat_values = []
@@ -421,7 +372,7 @@ elif page == "📈 可视化分析":
             if pd.isna(v): v = 0
             heat_values.append([m - 1, yi, round(float(v), 1)])
             
-    heat = HeatMap(init_opts=opts.InitOpts(height="360px", bg_color="#FFFFFF"))
+    heat = HeatMap(init_opts=opts.InitOpts(width="100%", height="360px", bg_color="#FFFFFF"))
     heat.add_xaxis([f"{m}月" for m in range(1, 13)])
     heat.add_yaxis("年份", [str(y) for y in years_h], heat_values, label_opts=opts.LabelOpts(is_show=True, font_size=9))
     heat.set_global_opts(
@@ -429,14 +380,13 @@ elif page == "📈 可视化分析":
         xaxis_opts=opts.AxisOpts(splitarea_opts=opts.SplitAreaOpts(is_show=False)),
         yaxis_opts=opts.AxisOpts(splitarea_opts=opts.SplitAreaOpts(is_show=False)),
     )
-    st.caption(f"热力主体：{heat_caption}")
-    st_pyecharts(heat, key=f"heat_{scope}")
+    st_pyecharts(heat)
 
     st.markdown("#### ④ GDP增速—货邮吞吐量相关性散点图")
     sc_df = df.copy() if scope == "全部机场对比" else df[df["机场名称"] == scope].copy()
     sc_df = sc_df.sample(min(len(sc_df), 500), random_state=42)
 
-    scatter = Scatter(init_opts=opts.InitOpts(height="400px", bg_color="#FFFFFF"))
+    scatter = Scatter(init_opts=opts.InitOpts(width="100%", height="400px", bg_color="#FFFFFF"))
     scatter.add_xaxis(sc_df["区域GDP增速(%)"].round(2).tolist())
     for ap in sorted(sc_df["机场名称"].unique()):
         sub = sc_df[sc_df["机场名称"] == ap]
@@ -447,8 +397,7 @@ elif page == "📈 可视化分析":
         tooltip_opts=opts.TooltipOpts(trigger="item"),
         legend_opts=opts.LegendOpts(pos_top="2%"),
     )
-    st_pyecharts(scatter, key=f"scatter_{scope}")
-
+    st_pyecharts(scatter)
 
 # =============================================================================
 # 7. 页面：智能预测中心
@@ -470,12 +419,7 @@ elif page == "🎯 智能预测中心":
         recent_year = int(hist_years[-1])
         default_base = float(hist_values[-1])
 
-        base_cargo = st.number_input(
-            "基准年货邮吞吐量（吨）",
-            min_value=1.0, max_value=1_000_000.0,
-            value=round(default_base, 1), step=10.0,
-            help="默认取该机场最新年份全年合计，可手动覆盖。",
-        )
+        base_cargo = st.number_input("基准年货邮吞吐量（吨）", min_value=1.0, max_value=1_000_000.0, value=round(default_base, 1), step=10.0)
         
         st.markdown("---")
         st.markdown("**弹性系数法专用参数**")
@@ -488,21 +432,18 @@ elif page == "🎯 智能预测中心":
 
     with col_r:
         st.markdown("**② 多模型预测结果对比**")
-        st.caption("系统默认展示全部四种算法的结果，可在图例中点击隐藏/显示特定曲线。")
+        st.caption("图表底部可左右滑动缩放，图例可点击隐藏/显示对应曲线。")
         
         preds_elasticity = model_elasticity(base_cargo, gdp_growth_pct, elasticity, horizon)
         preds_linear = model_linear_regression(hist_values, horizon)
         preds_gm11 = model_gm11(hist_values, horizon)
         preds_holt = model_holt(hist_values, horizon)
         
-        comp_line = Line(init_opts=opts.InitOpts(height="400px", bg_color="#FFFFFF"))
+        # 设置 width="100%" 自适应宽度，legend 设置可滑动，增加 datazoom 缩放
+        comp_line = Line(init_opts=opts.InitOpts(width="100%", height="420px", bg_color="#FFFFFF"))
         comp_line.add_xaxis([str(y) for y in hist_years] + [str(y) for y in years_future])
         
-        comp_line.add_yaxis(
-            "历史真实数据", [round(v, 1) for v in hist_values] + [None] * horizon, 
-            is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=3, color="#333333"),
-            itemstyle_opts=opts.ItemStyleOpts(color="#333333")
-        )
+        comp_line.add_yaxis("历史真实数据", [round(v, 1) for v in hist_values] + [None] * horizon, is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=3, color="#333333"), itemstyle_opts=opts.ItemStyleOpts(color="#333333"))
         
         models = [
             ("弹性系数法 (专业规划)", preds_elasticity, "#1E6FA8"),
@@ -512,20 +453,20 @@ elif page == "🎯 智能预测中心":
         ]
         
         for name, preds, color in models:
-            comp_line.add_yaxis(
-                name, [None] * len(hist_years) + [round(v, 1) for v in preds], 
-                is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=2, type_="dashed", color=color),
-                itemstyle_opts=opts.ItemStyleOpts(color=color)
-            )
+            comp_line.add_yaxis(name, [None] * len(hist_years) + [round(v, 1) for v in preds], is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=2, type_="dashed", color=color), itemstyle_opts=opts.ItemStyleOpts(color=color))
             
         comp_line.set_global_opts(
             xaxis_opts=opts.AxisOpts(type_="category"),
             yaxis_opts=opts.AxisOpts(name="吨"),
             tooltip_opts=opts.TooltipOpts(trigger="axis"),
-            legend_opts=opts.LegendOpts(pos_top="0%")
+            # 图例开启滑动模式，放置在顶部
+            legend_opts=opts.LegendOpts(type_="scroll", pos_top="0%", pos_left="center"),
+            # 增加底部缩放滑动条
+            datazoom_opts=[opts.DataZoomOpts(type_="slider", range_start=0, range_end=100)],
         )
         st_pyecharts(comp_line)
 
+        # 修复表格：只保留1位小数，取消高亮，防止看不清
         res_df = pd.DataFrame({
             "年份": years_future,
             "弹性系数法": [round(v, 1) for v in preds_elasticity],
@@ -533,18 +474,13 @@ elif page == "🎯 智能预测中心":
             "GM(1,1)": [round(v, 1) for v in preds_gm11],
             "Holt平滑": [round(v, 1) for v in preds_holt],
         }).set_index("年份")
-        st.dataframe(res_df.style.highlight_max(axis=1, color='#D4E6F1'), use_container_width=True)
+        st.dataframe(res_df, use_container_width=True)
 
     st.divider()
     st.markdown("**③ 弹性系数率定辅助**")
-    st.caption("用历史数据估算各机场隐含弹性（货邮增长率 / GDP增速），供参数设置参考。")
-    
     cal_rows = []
     for ap in sorted(df["机场名称"].unique()):
-        ap_year = df[df["机场名称"] == ap].groupby("年份").agg(
-            货邮=("货邮吞吐量(吨)", "sum"),
-            GDP=("区域GDP增速(%)", "mean")
-        ).reset_index()
+        ap_year = df[df["机场名称"] == ap].groupby("年份").agg(货邮=("货邮吞吐量(吨)", "sum"), GDP=("区域GDP增速(%)", "mean")).reset_index()
         ap_year["货邮增长率(%)"] = ap_year["货邮"].pct_change() * 100
         ap_year["隐含弹性"] = ap_year["货邮增长率(%)"] / ap_year["GDP"].replace(0, np.nan)
         ap_year["机场名称"] = ap
