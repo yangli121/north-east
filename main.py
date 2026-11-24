@@ -15,24 +15,25 @@ from pyecharts import options as opts
 from pyecharts.charts import Line, Pie, HeatMap, Scatter
 
 # =============================================================================
-# 0. 全局配置与页面美化（强制浅色模式，防止深色模式看不清）
+# 0. 全局配置与页面美化
 # =============================================================================
 st.set_page_config(
     page_title="机场货邮数据分析与智能预测系统",
     page_icon="✈️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded" # 强制默认展开侧边栏
 )
 
 st.markdown("""
 <style>
+    /* 隐藏多余菜单，但保留 header 以显示侧边栏折叠按钮 */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
     
     .stApp { background-color: #F4F7F9 !important; }
     h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown { color: #2C3E50 !important; }
     
+    /* 顶部主标题渐变，去掉了 Emoji */
     .main-title {
         font-size: 2.2rem;
         font-weight: 800;
@@ -50,6 +51,7 @@ st.markdown("""
         margin-bottom: 25px;
     }
     
+    /* 卡片式指标设计 */
     div[data-testid="stMetric"] {
         background-color: #FFFFFF !important;
         border-radius: 8px;
@@ -59,12 +61,14 @@ st.markdown("""
     }
     div[data-testid="stMetric"] * { color: #0B3D6B !important; }
     
+    /* 侧边栏美化 */
     [data-testid="stSidebar"] {
         background-color: #FFFFFF !important;
         box-shadow: 2px 0 5px rgba(0,0,0,0.05);
     }
     [data-testid="stSidebar"] * { color: #2C3E50 !important; }
     
+    /* 按钮样式 */
     .stButton>button {
         background-color: #1E6FA8 !important;
         color: #FFFFFF !important;
@@ -72,7 +76,6 @@ st.markdown("""
         border: none;
     }
     .stButton>button:hover { background-color: #0B3D6B !important; }
-    .stDataFrame { background-color: #FFFFFF !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -183,7 +186,7 @@ def model_holt(historical_y, years, alpha=0.3, beta=0.1):
 # =============================================================================
 # 3. 页面顶部与侧边栏
 # =============================================================================
-st.markdown('<div class="main-title">✈️ 机场货邮吞吐量数据分析与智能预测系统</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">机场货邮吞吐量数据分析与智能预测系统</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">多维数据管理 · 交互式可视化 · 经典与智能算法预测</div>', unsafe_allow_html=True)
 
 df = load_data()
@@ -439,7 +442,6 @@ elif page == "🎯 智能预测中心":
         preds_gm11 = model_gm11(hist_values, horizon)
         preds_holt = model_holt(hist_values, horizon)
         
-        # 设置 width="100%" 自适应宽度，legend 设置可滑动，增加 datazoom 缩放
         comp_line = Line(init_opts=opts.InitOpts(width="100%", height="420px", bg_color="#FFFFFF"))
         comp_line.add_xaxis([str(y) for y in hist_years] + [str(y) for y in years_future])
         
@@ -459,14 +461,11 @@ elif page == "🎯 智能预测中心":
             xaxis_opts=opts.AxisOpts(type_="category"),
             yaxis_opts=opts.AxisOpts(name="吨"),
             tooltip_opts=opts.TooltipOpts(trigger="axis"),
-            # 图例开启滑动模式，放置在顶部
             legend_opts=opts.LegendOpts(type_="scroll", pos_top="0%", pos_left="center"),
-            # 增加底部缩放滑动条
             datazoom_opts=[opts.DataZoomOpts(type_="slider", range_start=0, range_end=100)],
         )
         st_pyecharts(comp_line)
 
-        # 修复表格：只保留1位小数，取消高亮，防止看不清
         res_df = pd.DataFrame({
             "年份": years_future,
             "弹性系数法": [round(v, 1) for v in preds_elasticity],
